@@ -7,22 +7,137 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #0f172a; overflow: hidden; touch-action: none; height: 100vh; width: 100vw; margin: 0; display: flex; align-items: center; justify-content: center; }
-        canvas { background: linear-gradient(to bottom, #1e293b 0%, #334155 100%); display: block; }
-        .hud { position: absolute; top: 20px; left: 20px; color: white; pointer-events: none; z-index: 20; }
-        #failure-alert { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 100; background: rgba(15, 23, 42, 0.4); pointer-events: none; }
-        .alert-box { background: #000; border: 4px solid #ef4444; padding: 30px 50px; color: #ef4444; font-family: 'Press Start 2P', cursive; font-size: 20px; text-align: center; box-shadow: 0 0 50px rgba(239, 68, 68, 0.6); animation: pulseAlert 0.4s ease-in-out infinite alternate; }
-        @keyframes pulseAlert { from { transform: scale(1); } to { transform: scale(1.1); } }
-        .skill-card { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.2s ease; }
-        #loading-overlay { position: fixed; inset: 0; background: #0f172a; z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; font-family: 'Press Start 2P', cursive; font-size: 10px; transition: opacity 0.5s ease; }
-        .floating-text { position: absolute; pointer-events: none; color: #f97316; font-weight: 900; animation: floatUp 2s forwards; text-shadow: 0 0 10px rgba(249, 115, 22, 0.5); z-index: 40; white-space: nowrap; }
-        @keyframes floatUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-100px); opacity: 0; } }
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: #0f172a; 
+            overflow: hidden; 
+            touch-action: none; 
+            height: 100vh;
+            width: 100vw;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        canvas { 
+            background: linear-gradient(to bottom, #1e293b 0%, #334155 100%); 
+            display: block;
+        }
+
+        .hud { 
+            position: absolute; 
+            top: 20px; 
+            left: 20px; 
+            color: white; 
+            pointer-events: none; 
+            z-index: 20;
+        }
+
+        /* Centered Failure Alert */
+        #failure-alert {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            background: rgba(15, 23, 42, 0.4);
+            pointer-events: none;
+        }
+
+        .alert-box {
+            background: #000;
+            border: 4px solid #ef4444;
+            padding: 30px 50px;
+            color: #ef4444;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 20px;
+            text-align: center;
+            box-shadow: 0 0 50px rgba(239, 68, 68, 0.6);
+            animation: pulseAlert 0.4s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulseAlert {
+            from { transform: scale(1); }
+            to { transform: scale(1.1); }
+        }
+
+        .floating-text {
+            position: absolute;
+            pointer-events: none;
+            color: #f97316;
+            font-weight: 900;
+            animation: floatUp 3s forwards; 
+            text-shadow: 0 0 10px rgba(249, 115, 22, 0.5);
+            z-index: 40;
+            white-space: nowrap;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 1; }
+            80% { opacity: 1; } 
+            100% { transform: translateY(-120px); opacity: 0; }
+        }
+
+        .skill-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s ease;
+        }
+
+        .pixel-header {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 14px;
+            color: #f97316;
+            text-transform: uppercase;
+        }
+
+        .score-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 6px;
+        }
+        .score-row {
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .score-row td {
+            padding: 10px 15px;
+            font-size: 12px;
+            color: #cbd5e1;
+        }
+        .score-row:first-child td {
+            color: #fb923c;
+            font-weight: 900;
+            background: rgba(249, 115, 22, 0.1);
+        }
+        
+        #loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: #0f172a;
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            transition: opacity 0.5s ease;
+        }
+
+        /* Fallback icon style */
+        .fallback-icon {
+            font-size: 3rem;
+        }
     </style>
 </head>
 <body class="relative">
 
     <div id="loading-overlay">
-        <div class="mb-4 text-orange-500">CONNECTING TO CLOUD...</div>
+        <div class="mb-4 text-orange-500">INITIALIZING CLOUD CORE...</div>
         <div class="w-48 h-1 bg-slate-800 rounded-full overflow-hidden">
             <div class="h-full bg-orange-500 animate-[pulse_1.5s_infinite]"></div>
         </div>
@@ -33,45 +148,80 @@
     </div>
 
     <div id="game-ui" class="fixed inset-0 z-30 flex items-center justify-center pointer-events-none p-4">
+        <!-- Start Screen -->
         <div id="start-screen" class="bg-slate-900 border-2 border-orange-500 p-8 md:p-10 rounded-3xl shadow-2xl text-center max-w-lg pointer-events-auto">
-            <div class="mb-4 flex justify-center"><div class="bg-orange-500 p-4 rounded-2xl rotate-3 shadow-lg"><span class="text-4xl">🚀</span></div></div>
-            <h1 class="text-3xl font-black text-white mb-2 italic tracking-tighter uppercase">Super PM World</h1>
-            <p class="text-orange-500 font-bold mb-4 tracking-widest text-sm uppercase">YAD2 EDITION</p>
+            <div class="mb-4 flex justify-center">
+                <!-- Image with rocket fallback if file is missing -->
+                <div id="logo-container" class="bg-orange-500 p-2 rounded-2xl rotate-3 shadow-lg overflow-hidden flex items-center justify-center w-24 h-24">
+                    <img id="main-logo" src="Gemini_Generated_Image_qxpai5qxpai5qxpa.png" 
+                         class="w-full h-full object-cover rounded-xl" 
+                         alt="PM Logo"
+                         onerror="this.style.display='none'; document.getElementById('logo-fallback').classList.remove('hidden');">
+                    <span id="logo-fallback" class="hidden fallback-icon">🚀</span>
+                </div>
+            </div>
+            <h1 class="text-3xl font-black text-white mb-2 italic tracking-tighter uppercase text-center">Super PM World</h1>
+            <p class="text-orange-500 font-bold mb-4 tracking-widest text-sm uppercase text-center">YAD2 EDITION</p>
+            
             <div class="mb-6 space-y-3">
                 <label class="block text-[10px] text-slate-500 uppercase font-black tracking-widest text-center">Enter Your Name:</label>
-                <input type="text" id="player-name" placeholder="" class="w-full bg-slate-800 border-2 border-slate-700 rounded-xl px-4 py-3 text-white focus:border-orange-500 outline-none transition-all font-bold text-center">
+                <input type="text" id="player-name" placeholder="" 
+                    class="w-full bg-slate-800 border-2 border-slate-700 rounded-xl px-4 py-3 text-white focus:border-orange-500 outline-none transition-all font-bold text-center">
             </div>
-            <button onclick="startGame()" id="start-btn" class="w-full bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-xl font-black text-xl shadow-lg transition-all active:scale-95 uppercase">START MISSION →</button>
+
+            <button onclick="startGame()" id="start-btn" class="w-full bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-xl font-black text-xl shadow-lg transition-all active:scale-95 group uppercase">
+                START MISSION
+                <span class="inline-block transition-transform group-hover:translate-x-2 ml-2">→</span>
+            </button>
             <div class="mt-6 text-[9px] text-slate-500 font-mono uppercase tracking-[0.2em]">Created by Linoy Cohen</div>
         </div>
 
+        <!-- Win Screen -->
         <div id="win-screen" class="hidden bg-slate-900 border-4 border-orange-500 p-6 md:p-8 rounded-3xl shadow-2xl text-center max-w-5xl w-full pointer-events-auto max-h-[95vh] overflow-y-auto">
             <div class="flex flex-col lg:flex-row gap-8 text-left">
                 <div class="flex-1 space-y-6">
                     <div class="inline-block bg-orange-500 text-black font-black px-3 py-1 rounded text-[10px] tracking-widest uppercase">Mission Accomplished</div>
                     <h2 class="text-4xl font-black text-white italic uppercase tracking-tighter leading-none">KPIs SECURED!</h2>
+                    
                     <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-slate-800 p-6 rounded-xl border border-white/5 text-center"><div class="text-[10px] text-slate-500 font-bold uppercase mb-1">Final Score</div><div id="final-score-val" class="text-3xl font-black text-orange-500">0</div></div>
-                        <div class="bg-slate-800 p-6 rounded-xl border border-white/5 text-center"><div class="text-[10px] text-slate-500 font-bold uppercase mb-1">Time</div><div id="completion-time" class="text-3xl font-black text-cyan-400">0s</div></div>
+                        <div class="bg-slate-800 p-6 rounded-xl border border-white/5 text-center">
+                            <div class="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Final Efficiency</div>
+                            <div id="final-score-val" class="text-3xl font-black text-orange-500">0</div>
+                        </div>
+                        <div class="bg-slate-800 p-6 rounded-xl border border-white/5 text-center">
+                            <div class="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Time</div>
+                            <div id="completion-time" class="text-3xl font-black text-cyan-400">0s</div>
+                        </div>
                     </div>
-                    <div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">AI Strategic Toolkit</div>
+
+                    <div class="text-[10px] font-black text-white uppercase tracking-[0.2em] border-b border-white/10 pb-2">AI Strategic Toolkit</div>
                     <div id="skill-grid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2"></div>
-                    <button onclick="location.reload()" class="w-full bg-white text-black py-4 rounded-xl font-black hover:bg-orange-500 hover:text-white transition-all shadow-lg mt-4">Play Again</button>
+
+                    <button onclick="location.reload()" class="w-full bg-white text-black py-4 rounded-xl font-black hover:bg-orange-500 hover:text-white transition-all uppercase text-sm shadow-lg mt-4">
+                        Play Again
+                    </button>
                 </div>
+
                 <div class="flex-1">
                     <div class="bg-black/30 p-6 rounded-2xl border border-orange-500/20 shadow-inner h-full min-h-[300px]">
                         <div class="pixel-header mb-6 text-center">LEADERBOARD</div>
-                        <table class="score-table"><tbody id="score-rows"></tbody></table>
+                        <table class="score-table">
+                            <tbody id="score-rows"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="hud flex gap-8">
-        <div class="bg-black/50 backdrop-blur-md px-4 py-2 rounded-lg border border-white/10">
-            <div class="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Efficiency</div>
-            <div class="text-xl font-black text-orange-500" id="score">0</div>
+    <div class="hud flex gap-4 md:gap-8">
+        <div class="bg-black/50 backdrop-blur-md px-3 py-1.5 md:px-4 md:py-2 rounded-lg border border-white/10">
+            <div class="text-[8px] md:text-[10px] text-slate-400 uppercase font-bold tracking-widest">Efficiency</div>
+            <div class="text-lg md:text-xl font-black text-orange-500" id="score">0</div>
+        </div>
+        <div class="bg-black/50 backdrop-blur-md px-3 py-1.5 md:px-4 md:py-2 rounded-lg border border-white/10">
+            <div class="text-[8px] md:text-[10px] text-slate-400 uppercase font-bold tracking-widest">AI Assets</div>
+            <div class="text-lg md:text-xl font-black text-cyan-400" id="ai-count">0/3</div>
         </div>
     </div>
 
@@ -81,6 +231,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, push, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+        // Firebase Configuration (Realtime Database)
         const firebaseConfig = {
             apiKey: "AIzaSyAcJ8PEWP_EF-VQ_38LTXxmUg2UVmzx-Lg",
             authDomain: "super-pm-world.firebaseapp.com",
@@ -124,22 +275,175 @@
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+
         let gameState = 'menu', score = 0, playerMoved = false, isDead = false;
-        let startTime, introStartTime, introBubbleActive = false;
+        let aiCollected = 0, celebrationTimer = 0;
+        let introStartTime = 0, introBubbleActive = false;
+        let startTime, finalTime;
+
+        const gravity = 0.5, friction = 0.85;
+        const keys = { right: false, left: false, up: false };
+
         const player = { x: 100, y: 0, width: 40, height: 60, speed: 5.5, velX: 0, velY: 0, jumping: false, grounded: false };
+
         const skillsData = [
             {n: 'Vibe Coding', i: '🤖'}, {n: 'Slides', i: '📊'}, {n: 'Mockups', i: '🎨'}, {n: 'Strategy', i: '🧠'},
-            {n: 'Summaries', i: '📝'}, {n: 'Analytics', i: '📈'}, {n: 'BRDs', i: '📄'}, {n: 'Market Res.', i: '🔍'},
+            {n: 'Summaries', i: '📝'}, {n: 'Analytics', i: '📈'}, {n: 'PRDs', i: '📄'}, {n: 'Market Res.', i: '🔍'},
             {n: 'Data Org', i: '📂'}, {n: 'Dev Tickets', i: '🎫'}, {n: 'Brainstorm', i: '💡'},
             {n: 'Musical', i: '🎵', url: 'https://www.youtube.com/watch?v=CCvqVZxFfAg&list=RDCCvqVZxFfAg&start_radio=1'}
         ];
-        let goal = { x: 3800, y: 0, width: 120, height: 220 };
-        const keys = { right: false, left: false, up: false };
+
+        let platforms = [], enemies = [], collectibles = [], goal = { x: 3800, y: 0, width: 120, height: 220 };
 
         function initWorld() {
             canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-            player.y = canvas.height * 0.85 - 100; player.x = 100;
-            goal.y = canvas.height * 0.85 - goal.height;
+            const groundY = canvas.height * 0.85;
+            platforms = [
+                { x: 0, y: groundY, width: 1200, height: 400 },
+                { x: 1300, y: groundY - 120, width: 400, height: 40 },
+                { x: 1800, y: groundY - 240, width: 400, height: 40 },
+                { x: 2300, y: groundY - 120, width: 800, height: 400 },
+                { x: 3200, y: groundY - 240, width: 400, height: 40 },
+                { x: 3700, y: groundY, width: 1500, height: 400 }
+            ];
+            collectibles = [
+                { x: 1350, y: groundY - 180, width: 40, height: 40, type: 'Vibe Coding', icon: '🤖', outcome: 'CRM Automated!' },
+                { x: 1900, y: groundY - 300, width: 40, height: 40, type: 'Analytics', icon: '📊', outcome: 'Insights!' },
+                { x: 3300, y: groundY - 300, width: 40, height: 40, type: 'AI Synthesis', icon: '✨', outcome: 'PRDs Ready!' }
+            ];
+            enemies = [
+                { x: 600, y: groundY - 40, width: 40, height: 40, speed: 2, range: 150, startX: 600, label: 'Manual Work', type: 'goomba' },
+                { x: 2500, y: groundY - 160, width: 40, height: 40, speed: 2.5, range: 200, startX: 2500, label: 'Process Lag', type: 'snail' }
+            ];
+            goal.y = groundY - goal.height;
+            resetPlayerPos();
+        }
+
+        function resetPlayerPos() {
+            const groundY = canvas.height * 0.85;
+            player.x = 100; player.y = groundY - 100;
+            player.velX = 0; player.velY = 0;
+            isDead = false;
+        }
+
+        function drawIntroBubble(ctx, x, y) {
+            const lines = ["Hey there, I'm Linoy", "Let's slAI another day!"];
+            ctx.save();
+            ctx.font = "bold 10px 'Press Start 2P', cursive";
+            const metrics = lines.map(l => ctx.measureText(l).width);
+            const maxW = Math.max(...metrics);
+            const bx = Math.max(20 + player.x - canvas.width/4, x - maxW/2);
+            const by = y - 100;
+            ctx.fillStyle = "white"; ctx.strokeStyle = "black"; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.roundRect(bx, by, maxW + 30, 65, 8); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(x + 15, by + 65); ctx.lineTo(x + 20, by + 80); ctx.lineTo(x + 25, by + 65); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = "black"; ctx.textAlign = "center";
+            ctx.fillText(lines[0], bx + (maxW+30)/2, by + 25);
+            ctx.fillText(lines[1], bx + (maxW+30)/2, by + 48);
+            ctx.restore();
+        }
+
+        function drawPixelPlayer(ctx, x, y, width, height, isDancing) {
+            const px = width / 10;
+            let currentY = y + (isDancing ? Math.sin(Date.now() / 100) * 10 : 0);
+            ctx.save();
+            ctx.fillStyle = '#5d4037'; ctx.fillRect(x + px*2, currentY, px*6, px*5);
+            ctx.fillRect(x + px, currentY + px, px, px*7); ctx.fillRect(x + px*8, currentY + px, px, px*7);
+            ctx.fillStyle = '#ffdbac'; ctx.fillRect(x + px*2, currentY + px*3, px*6, px*5);
+            ctx.fillStyle = 'black'; ctx.fillRect(x + px*3, currentY + px*5, px, px); ctx.fillRect(x + px*6, currentY + px*5, px, px);
+            ctx.fillStyle = '#f97316'; ctx.fillRect(x + px*2, currentY + px*8, px*6, px*5);
+            ctx.fillStyle = '#1e293b'; ctx.fillRect(x + px*2, currentY + px*13, px*2, px*2); ctx.fillRect(x + px*6, currentY + px*13, px*2, px*2);
+            ctx.fillStyle = 'black'; ctx.fillRect(x + px, currentY + px*14, px*3, px); ctx.fillRect(x + px*6, currentY + px*14, px*3, px);
+            ctx.restore();
+        }
+
+        function drawPrincessKPI(ctx, x, y, width, isDancing) {
+            const px = width / 10;
+            let currentY = y + (isDancing ? Math.cos(Date.now() / 100) * 10 : 0);
+            ctx.save();
+            
+            // Blonde Hair (Gold Yellow)
+            ctx.fillStyle = '#fde047'; 
+            ctx.fillRect(x + px*2, currentY + px, px*6, px*6); // Top hair
+            ctx.fillRect(x + px*2, currentY + px*2, px, px*8); // Side hair left
+            ctx.fillRect(x + px*7, currentY + px*2, px, px*8); // Side hair right
+            
+            // Dress
+            ctx.fillStyle = '#f472b6'; 
+            ctx.fillRect(x + px, currentY + px*6, px*8, px*9); 
+            ctx.fillStyle = '#db2777'; 
+            ctx.fillRect(x + px*2, currentY + px*8, px*6, px*7); 
+            
+            // Head (Skin)
+            ctx.fillStyle = '#ffdbac'; 
+            ctx.fillRect(x + px*3, currentY + px*2, px*4, px*4);
+            
+            // KPI text replacing face (Centered in Head)
+            ctx.fillStyle = '#9d174d'; 
+            ctx.font = `bold ${px*2.5}px Inter`; 
+            ctx.textAlign = 'center'; 
+            ctx.textBaseline = 'middle';
+            ctx.fillText('KPI', x + width/2, currentY + px*4);
+            
+            // Crown
+            ctx.fillStyle = '#fbbf24'; 
+            ctx.fillRect(x + px*3, currentY, px*4, px);
+            ctx.fillRect(x + px*3, currentY - px, px, px);
+            ctx.fillRect(x + px*6, currentY - px, px, px);
+            ctx.fillRect(x + px*4.5, currentY - px * 1.5, px, px); 
+            ctx.restore();
+        }
+
+        function drawCastleTower(ctx, x, y, width, height, isDancing) {
+            const px = width / 10;
+            // Main structure
+            ctx.fillStyle = '#94a3b8'; ctx.fillRect(x, y, width, height);
+            ctx.strokeStyle = '#64748b';
+            for(let i=0; i<height; i+=30) { ctx.beginPath(); ctx.moveTo(x, y+i); ctx.lineTo(x+width, y+i); ctx.stroke(); }
+            for(let i=0; i<width; i+=px*2) ctx.fillStyle = '#94a3b8', ctx.fillRect(x + i, y - px*2, px, px*2);
+            
+            // Bright Flagpole (Silver White)
+            ctx.strokeStyle = "#e2e8f0"; 
+            ctx.lineWidth = 3; 
+            ctx.beginPath(); 
+            ctx.moveTo(x + width/2, y); 
+            ctx.lineTo(x + width/2, y - 60); 
+            ctx.stroke();
+            
+            // yad2 Flag
+            ctx.fillStyle = '#f97316'; 
+            ctx.fillRect(x + width/2, y - 60, 50, 35);
+            ctx.fillStyle = 'white'; 
+            ctx.font = 'bold 11px Inter'; 
+            ctx.textAlign = 'left';
+            ctx.fillText('yad2', x + width/2 + 7, y - 37);
+            
+            // PRINCESS KPI - Positioned in the MIDDLE of the tower
+            drawPrincessKPI(ctx, x + width/4, y + (height / 2) - 40, width/2, isDancing);
+        }
+
+        function drawPixelEnemy(ctx, x, y, width, height, type, label) {
+            const px = width / 10;
+            ctx.save();
+            if (type === 'goomba') { 
+                ctx.fillStyle = '#92400e'; ctx.fillRect(x + px, y + px*2, px*8, px*7);
+                ctx.fillStyle = '#fef3c7'; ctx.fillRect(x + px*2, y + px*5, px*4, px*3);
+                ctx.fillStyle = 'white'; ctx.fillRect(x + px*2, y + px*3, px*2, px*2); ctx.fillRect(x + px*6, y + px*3, px*2, px*2);
+                ctx.fillStyle = 'black'; ctx.fillRect(x + px*2.5, y + px*3.5, px, px); ctx.fillRect(x + px*6.5, y + px*3.5, px, px);
+            } else { 
+                ctx.fillStyle = '#0d9488'; ctx.fillRect(x + px, y + px*7, px*9, px*2); ctx.fillStyle = '#f97316'; ctx.fillRect(x + px, y + px*3, px*6, px*5); 
+            }
+            ctx.font = "bold 12px Inter"; ctx.fillStyle = "white"; ctx.textAlign = "center"; ctx.fillText(label, x + width/2, y - 12);
+            ctx.restore();
+        }
+
+        function handleFailure(msg) {
+            if (isDead) return; isDead = true;
+            const alert = document.getElementById('failure-alert');
+            document.getElementById('alert-text').innerText = msg;
+            alert.style.display = 'flex';
+            score = Math.max(0, score - 200); document.getElementById('score').innerText = score;
+            setTimeout(() => { alert.style.display = 'none'; resetPlayerPos(); }, 1200);
         }
 
         function startGame() {
@@ -148,70 +452,70 @@
             introBubbleActive = true; initWorld(); requestAnimationFrame(gameLoop);
         }
 
-        function handleFailure() {
-            if (isDead) return; isDead = true;
-            document.getElementById('failure-alert').style.display = 'flex';
-            setTimeout(() => { document.getElementById('failure-alert').style.display = 'none'; player.x = 100; isDead = false; }, 1200);
-        }
-
         function update() {
-            if (gameState !== 'playing' || isDead) return;
-            if (keys.up && player.grounded) { player.velY = -15.4; player.grounded = false; playerMoved = true; }
-            if (keys.right) { player.velX = 5; playerMoved = true; }
-            if (keys.left) { player.velX = -5; playerMoved = true; }
-            player.velX *= 0.85; player.velY += 0.5; player.x += player.velX; player.y += player.velY;
-            if (player.y > canvas.height * 0.85 - player.height) { player.y = canvas.height * 0.85 - player.height; player.velY = 0; player.grounded = true; }
-            
-            if (player.x > goal.x) { 
-                gameState = 'win';
-                const finalTime = Math.floor((Date.now() - startTime) / 1000);
-                const finalScore = Math.max(0, 5000 - (finalTime * 15));
-                document.getElementById('final-score-val').innerText = finalScore;
-                document.getElementById('completion-time').innerText = finalTime + "s";
-                window.saveFinalScore(document.getElementById('player-name').value, finalScore, finalTime);
-                document.getElementById('win-screen').classList.remove('hidden');
-                document.getElementById('skill-grid').innerHTML = skillsData.map(s => {
-                    const isMusical = s.n === 'Musical';
-                    const content = `<span class="text-lg">${s.i}</span><span class="text-[7px] uppercase">${s.n}</span>`;
-                    if (isMusical) return `<a href="${s.url}" target="_blank" class="skill-card p-1.5 rounded flex flex-col items-center justify-center bg-orange-500/20 border-orange-500/50 hover:scale-105 transition">${content}</a>`;
-                    return `<div class="skill-card p-1.5 rounded flex flex-col items-center justify-center">${content}</div>`;
-                }).join('');
+            if (gameState === 'menu' || gameState === 'win' || isDead) return;
+            if (gameState === 'celebrating') {
+                celebrationTimer++;
+                if (celebrationTimer > 150) { 
+                    gameState = 'win'; finalTime = Math.floor((Date.now() - startTime) / 1000);
+                    const calculatedScore = Math.max(0, (score + 1000) - (finalTime * 15)); 
+                    document.getElementById('final-score-val').innerText = calculatedScore;
+                    document.getElementById('completion-time').innerText = finalTime + "s";
+                    window.saveFinalScore(document.getElementById('player-name').value, calculatedScore, finalTime);
+                    document.getElementById('win-screen').classList.remove('hidden');
+                    document.getElementById('skill-grid').innerHTML = skillsData.map(s => {
+                        const isMusical = s.n === 'Musical';
+                        const labelColor = isMusical ? 'color: #f97316;' : 'color: #ffffff;';
+                        const content = `<span class="text-xl mb-1">${s.i}</span><span class="text-[7px] font-black uppercase text-center" style="${labelColor}">${s.n}</span>`;
+                        const style = isMusical ? 'background: rgba(249, 115, 22, 0.2); border-color: rgba(249, 115, 22, 0.5);' : '';
+                        if(isMusical) return `<a href="${s.url}" target="_blank" class="skill-card p-2 rounded flex flex-col items-center justify-center shadow-sm hover:scale-105" style="${style}">${content}</a>`;
+                        return `<div class="skill-card p-2 rounded flex flex-col items-center justify-center shadow-sm">${content}</div>`;
+                    }).join('');
+                }
+                return;
             }
+            if (keys.up && player.grounded) { player.jumping = true; player.grounded = false; player.velY = -15.4; playerMoved = true; }
+            if (keys.right && player.velX < player.speed) { player.velX++; playerMoved = true; }
+            if (keys.left && player.velX > -player.speed) { player.velX--; playerMoved = true; }
+            player.velX *= friction; player.velY += gravity; player.x += player.velX; player.y += player.velY; player.grounded = false;
+            platforms.forEach(p => {
+                if (player.x < p.x + p.width && player.x + player.width > p.x && player.y < p.y + p.height && player.y + player.height > p.y) {
+                    if (player.y + player.height/2 < p.y + p.height/2 && player.velY >= 0) { player.grounded = true; player.jumping = false; player.velY = 0; player.y = p.y - player.height; }
+                    else if (player.y + player.height/2 > p.y + p.height/2) { player.velY = 0; player.y = p.y + p.height; }
+                }
+            });
+            collectibles.forEach(c => {
+                if (!c.collected && player.x < c.x+c.width && player.x + player.width > c.x && player.y < c.y+c.height && player.y + player.height > c.y) {
+                    c.collected = true; aiCollected++; score += 1000;
+                    const div = document.createElement('div'); div.className = 'floating-text'; div.innerText = c.outcome;
+                    div.style.left = (c.x - player.x + canvas.width/4) + 'px'; div.style.top = c.y + 'px';
+                    document.body.appendChild(div); setTimeout(() => div.remove(), 2500); 
+                    document.getElementById('ai-count').innerText = aiCollected + "/3"; document.getElementById('score').innerText = score;
+                }
+            });
+            enemies.forEach(e => {
+                e.x += e.speed; if (Math.abs(e.x - e.startX) > e.range) e.speed *= -1;
+                if (player.x < e.x + e.width && player.x + player.width > e.x && player.y < e.y + e.height && player.y + player.height > e.y) handleFailure("PROCESS LAG!");
+            });
+            if (player.x > goal.x && gameState === 'playing') { gameState = 'celebrating'; celebrationTimer = 0; }
+            if (player.y > canvas.height + 50) handleFailure("OUT OF SCOPE!");
             if (introBubbleActive && Date.now() - introStartTime > 3000 && playerMoved) introBubbleActive = false;
-            if (player.y > canvas.height) handleFailure();
         }
 
         function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.save(); ctx.translate(-player.x + canvas.width/4, 0);
-            // Ground
-            ctx.fillStyle = "#1e293b"; ctx.fillRect(0, canvas.height * 0.85, 5000, 400);
-            ctx.fillStyle = "#f97316"; ctx.fillRect(0, canvas.height * 0.85, 5000, 4);
-            // Tower
-            ctx.fillStyle = "#94a3b8"; ctx.fillRect(goal.x, goal.y, goal.width, goal.height);
-            // Flagpole
-            ctx.strokeStyle = "#475569"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(goal.x + 60, goal.y); ctx.lineTo(goal.x + 60, goal.y - 60); ctx.stroke();
-            // Flag
-            ctx.fillStyle = "#f97316"; ctx.fillRect(goal.x + 60, goal.y - 60, 50, 35);
-            ctx.fillStyle = "white"; ctx.font = "bold 11px Inter"; ctx.fillText("yad2", goal.x + 65, goal.y - 37);
-            // Player
-            ctx.fillStyle = "#f97316"; ctx.fillRect(player.x, player.y, player.width, player.height);
-            // Goomba (Basic)
-            ctx.fillStyle = "#92400e"; ctx.fillRect(800, canvas.height * 0.85 - 40, 40, 40);
-            ctx.fillStyle = "white"; ctx.fillRect(810, canvas.height * 0.85 - 30, 5, 5); ctx.fillRect(825, canvas.height * 0.85 - 30, 5, 5);
-            // Intro Bubble
-            if (introBubbleActive) {
-                ctx.fillStyle = "white"; ctx.beginPath(); ctx.roundRect(player.x - 20, player.y - 100, 200, 70, 10); ctx.fill();
-                ctx.fillStyle = "black"; ctx.font = "8px 'Press Start 2P'";
-                ctx.fillText("Hey there, I'm Linoy", player.x - 5, player.y - 75);
-                ctx.fillText("Let's slAI another day!", player.x - 5, player.y - 55);
-            }
-            ctx.restore();
+            ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.save(); ctx.translate(-player.x + canvas.width/4, 0);
+            platforms.forEach(p => { ctx.fillStyle = "#1e293b"; ctx.fillRect(p.x, p.y, p.width, p.height); ctx.fillStyle = "#f97316"; ctx.fillRect(p.x, p.y, p.width, 4); });
+            collectibles.forEach(c => { if (!c.collected) { ctx.font = "32px Arial"; ctx.fillText(c.icon, c.x, c.y + 32); ctx.font = "bold 12px Inter"; ctx.fillStyle = "white"; ctx.textAlign='center'; ctx.fillText(c.type, c.x+20, c.y - 12); } });
+            enemies.forEach(e => { drawPixelEnemy(ctx, e.x, e.y, e.width, e.height, e.type, e.label); });
+            drawCastleTower(ctx, goal.x, goal.y, goal.width, goal.height, gameState === 'celebrating');
+            drawPixelPlayer(ctx, player.x, player.y, player.width, player.height, gameState === 'celebrating');
+            if (introBubbleActive) drawIntroBubble(ctx, player.x, player.y); ctx.restore();
         }
 
-        function gameLoop() { update(); draw(); if(gameState === 'playing' || gameState === 'celebrating') requestAnimationFrame(gameLoop); }
-        window.addEventListener("keydown", e => { if(e.code==="ArrowRight") keys.right=true; if(e.code==="ArrowLeft") keys.left=true; if(e.code==="ArrowUp" || e.code==="Space") keys.up=true; });
-        window.addEventListener("keyup", e => { if(e.code==="ArrowRight") keys.right=false; if(e.code==="ArrowLeft") keys.left=false; if(e.code==="ArrowUp" || e.code==="Space") keys.up=false; });
+        function gameLoop() { update(); draw(); if (gameState !== 'win') requestAnimationFrame(gameLoop); }
+        window.addEventListener("keydown", e => { if (e.code === "ArrowRight") keys.right = true; if (e.code === "ArrowLeft") keys.left = true; if (e.code === "ArrowUp" || e.code === "Space") keys.up = true; });
+        window.addEventListener("keyup", e => { if (e.code === "ArrowRight") keys.right = false; if (e.code === "ArrowLeft") keys.left = false; if (e.code === "ArrowUp" || e.code === "Space") keys.up = false; });
+        window.addEventListener("resize", () => { initWorld(); });
         initWorld();
     </script>
 </body>
