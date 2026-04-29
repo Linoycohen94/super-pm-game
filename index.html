@@ -13,17 +13,17 @@
             background: #0f172a; 
             overflow: hidden; 
             touch-action: none; 
-            height: 100vh;
-            width: 100vw;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            height: 100vh; 
+            width: 100vw; 
+            margin: 0; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
         }
         
         canvas { 
             background: linear-gradient(to bottom, #1e293b 0%, #334155 100%); 
-            display: block;
+            display: block; 
         }
 
         .hud { 
@@ -32,7 +32,7 @@
             left: 20px; 
             color: white; 
             pointer-events: none; 
-            z-index: 20;
+            z-index: 20; 
         }
 
         #failure-alert {
@@ -116,17 +116,22 @@
             background: #0f172a;
             z-index: 100;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             color: white;
             font-family: 'Press Start 2P', cursive;
             font-size: 10px;
+            transition: opacity 0.5s ease;
         }
     </style>
 </head>
 <body class="relative">
 
-    <div id="loading-overlay">INITIALIZING CLOUD CORE...</div>
+    <div id="loading-overlay">
+        <span>INITIALIZING CLOUD CORE...</span>
+        <div id="offline-msg" class="mt-4 text-orange-500 hidden text-[8px]">CONNECTION SLOW - STANDBY</div>
+    </div>
 
     <div id="failure-alert">
         <div class="alert-box" id="alert-text">OUT OF SCOPE!</div>
@@ -180,10 +185,12 @@
                 </div>
 
                 <div class="flex-1">
-                    <div class="bg-black/30 p-6 rounded-2xl border border-orange-500/20 shadow-inner h-full">
+                    <div class="bg-black/30 p-6 rounded-2xl border border-orange-500/20 shadow-inner h-full min-h-[300px]">
                         <div class="pixel-header mb-6 text-center">SCORE BOARD</div>
                         <table class="score-table">
-                            <tbody id="score-rows"></tbody>
+                            <tbody id="score-rows">
+                                <tr class="score-row"><td colspan="2" class="text-center">Loading Cloud Scores...</td></tr>
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -207,63 +214,103 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // Environment Variables (provided by system)
         const firebaseConfig = JSON.parse(__firebase_config);
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'super-pm-world-yad2';
+        const initialToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-        let user = null;
+        let db, auth, user;
 
-        const initAuth = async () => {
+        const initCloud = async () => {
             try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                // Rule 3: Auth Before Queries
+                if (initialToken) {
+                    await signInWithCustomToken(auth, initialToken);
                 } else {
                     await signInAnonymously(auth);
                 }
                 user = auth.currentUser;
+                
                 document.getElementById('loading-overlay').style.opacity = '0';
                 setTimeout(() => document.getElementById('loading-overlay').remove(), 500);
+                
                 setupLeaderboardListener();
             } catch (error) {
-                document.getElementById('loading-overlay').innerText = "OFFLINE MODE";
-                setTimeout(() => document.getElementById('loading-overlay').remove(), 1000);
+                console.warn("Cloud connection error:", error);
+                document.getElementById('loading-overlay').innerHTML = "<span>LOCAL MODE ACTIVE</span>";
+                setTimeout(() => {
+                    document.getElementById('loading-overlay').style.opacity = '0';
+                    setTimeout(() => document.getElementById('loading-overlay').remove(), 500);
+                }, 1000);
+                setupLocalLeaderboard();
             }
         };
 
         const setupLeaderboardListener = () => {
+            if (!user) return;
+            // Rule 1: Strict Paths
             const scoresRef = collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard');
+            
+            // Rule 2: No Complex Queries (Fetch all, sort in JS)
             onSnapshot(scoresRef, (snapshot) => {
                 let scores = [];
                 snapshot.forEach(doc => scores.push(doc.data()));
                 scores.sort((a, b) => b.score - a.score);
-                const rows = document.getElementById('score-rows');
-                rows.innerHTML = scores.slice(0, 8).map((s, i) => `
-                    <tr class="score-row">
-                        <td class="font-bold">${i + 1}. ${s.name}</td>
-                        <td class="text-right">${s.time}s | <span class="text-orange-400 font-black">${s.score}</span></td>
-                    </tr>
-                `).join('');
+                renderScores(scores.slice(0, 8));
+            }, (err) => {
+                console.error("Listener error:", err);
+                setupLocalLeaderboard();
             });
         };
 
-        window.saveCloudScore = async (name, finalScore, time) => {
-            if (!user) return;
-            try {
-                const scoresRef = collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard');
-                await addDoc(scoresRef, {
-                    name: name || "Anonymous",
-                    score: finalScore,
-                    time: time,
-                    timestamp: Date.now()
-                });
-            } catch (error) {}
+        const setupLocalLeaderboard = () => {
+            const scores = JSON.parse(localStorage.getItem('super-pm-scores') || '[]');
+            renderScores(scores);
         };
 
-        initAuth();
+        const renderScores = (scores) => {
+            const rows = document.getElementById('score-rows');
+            if (!scores || scores.length === 0) {
+                rows.innerHTML = '<tr class="score-row"><td colspan="2" class="text-center italic">No scores yet.</td></tr>';
+                return;
+            }
+            rows.innerHTML = scores.map((s, i) => `
+                <tr class="score-row">
+                    <td class="font-bold">${i + 1}. ${s.name}</td>
+                    <td class="text-right">${s.time}s | <span class="text-orange-400 font-black">${s.score}</span></td>
+                </tr>
+            `).join('');
+        };
+
+        window.saveFinalScore = async (name, finalScore, time) => {
+            // Local fallback
+            let localScores = JSON.parse(localStorage.getItem('super-pm-scores') || '[]');
+            localScores.push({ name, score: finalScore, time });
+            localScores.sort((a, b) => b.score - a.score);
+            localStorage.setItem('super-pm-scores', JSON.stringify(localScores.slice(0, 8)));
+
+            if (db && user) {
+                try {
+                    const scoresRef = collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard');
+                    await addDoc(scoresRef, {
+                        name: name || "Anonymous",
+                        score: finalScore,
+                        time: time,
+                        timestamp: Date.now()
+                    });
+                } catch (e) {
+                    console.error("Cloud save error:", e);
+                }
+            }
+        };
+
+        initCloud();
     </script>
 
     <script>
@@ -416,8 +463,6 @@
         }
 
         function startGame() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
             currentPlayerName = document.getElementById('player-name').value || "Champion PM";
             document.getElementById('start-screen').classList.add('hidden');
             gameState = 'playing';
@@ -445,7 +490,6 @@
         }
 
         function update() {
-            // FIX: Removed strict "playing" return to allow "celebrating" timer to run
             if (gameState === 'menu' || gameState === 'win') return;
             if (isDead) return;
 
@@ -457,7 +501,9 @@
                     const calculatedScore = Math.max(0, (score + 1000) - (finalTime * 15)); 
                     document.getElementById('final-score-val').innerText = calculatedScore;
                     document.getElementById('completion-time').innerText = finalTime + "s";
-                    if (window.saveCloudScore) window.saveCloudScore(currentPlayerName, calculatedScore, finalTime);
+                    
+                    if (window.saveFinalScore) window.saveFinalScore(currentPlayerName, calculatedScore, finalTime);
+                    
                     document.getElementById('win-screen').classList.remove('hidden');
                     document.getElementById('skill-grid').innerHTML = skillsData.map(s => `
                         <div class="skill-card p-1.5 rounded flex flex-col items-center justify-center shadow-sm">
@@ -516,11 +562,7 @@
                 }
             });
 
-            if (player.x > goal.x && gameState === 'playing') { 
-                gameState = 'celebrating'; 
-                celebrationTimer = 0; 
-            }
-            
+            if (player.x > goal.x && gameState === 'playing') { gameState = 'celebrating'; celebrationTimer = 0; }
             if (player.y > canvas.height + 50) { handleFailure("OUT OF SCOPE!"); }
         }
 
